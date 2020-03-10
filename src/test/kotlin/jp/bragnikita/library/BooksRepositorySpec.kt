@@ -2,6 +2,7 @@ package jp.bragnikita.library
 
 import io.kotlintest.inspectors.forAll
 import io.kotlintest.inspectors.forAtLeastOne
+import io.kotlintest.matchers.collections.beOneOf
 import io.kotlintest.matchers.collections.shouldHaveSize
 import io.kotlintest.shouldBe
 import io.kotlintest.shouldHave
@@ -53,21 +54,21 @@ class BooksRepositorySpec(
     given("library") {
 
         repo.save(Book(null, "Title1", "Author1"))
-        repo.save(Book(null, "Title2", "Author2"))
+        repo.save(Book(null, "Title2", "Author24"))
         repo.save(Book(null, "Title3", "Author1"))
         repo.save(Book(null, "Title4", "Author2"))
         repo.save(Book(null, "Title5", "Author1"))
         repo.save(Book(null, "Title6", "Author3"))
 
         `when`("search by author Author2") {
-            val books = repo.findByAuthor("Author2")
+            val books = repo.findByAuthor("thor2")
 
             then ("has exact 2 results") {
                 books shouldHaveSize 2
             }
             then ("all the books found have author Author2") {
                 books.forAll {
-                    it.author shouldBe "Author2"
+                    it.author shouldBe beOneOf(listOf("Author2", "Author24"))
                 }
                 books.forAtLeastOne { it.title shouldBe "Title2" }
                 books.forAtLeastOne { it.title shouldBe "Title4" }
