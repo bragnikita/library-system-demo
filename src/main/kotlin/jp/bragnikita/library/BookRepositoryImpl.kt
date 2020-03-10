@@ -10,26 +10,55 @@ import javax.persistence.PersistenceContext
 import javax.validation.constraints.NotNull
 
 @Singleton
-open class BookRepositoryImpl() : BookRepository {
+open class BookRepositoryImpl(
+        @PersistenceContext @CurrentSession var entityManager: EntityManager
+) : BookRepository {
 
     @Transactional
     override fun save(@NotNull book: Book): Book {
-        TODO("Not yet implemented")
+        if (book.id == null) {
+            entityManager.persist(book)
+        } else {
+            entityManager.merge(book)
+        }
+        return book
     }
 
     override fun delete(@NotNull id: Int) {
-        TODO("Not yet implemented")
+        val book = entityManager.find(Book::class.java, id)
+        if (book != null) {
+            entityManager.remove(book)
+        }
     }
 
     override fun findByTitle(title: String): List<Book> {
-        TODO("Not yet implemented")
+        val cb = entityManager.criteriaBuilder
+        val q = cb.createQuery(Book::class.java)
+        val root = q.from(Book::class.java)
+        val param = cb.parameter(String::class.java)
+        q.select(root).where(cb.like(root.get("title"), cb.substring(param, 1)))
+
+        return entityManager.createQuery(q).setParameter(param, title).resultList
     }
 
     override fun findByAuthor(author: String): List<Book> {
-        TODO("Not yet implemented")
+
+        val cb = entityManager.criteriaBuilder
+        val q = cb.createQuery(Book::class.java)
+        val root = q.from(Book::class.java)
+        val param = cb.parameter(String::class.java)
+        q.select(root).where(cb.like(root.get("author"), cb.substring(param, 1)))
+
+        return entityManager.createQuery(q).setParameter(param, author).resultList
     }
 
+    @Transactional(readOnly = true)
     override fun getAll(): List<Book> {
-        TODO("Not yet implemented")
+        return entityManager.createQuery(
+                "select b from Book b",
+                Book::class.java
+        ).resultList
     }
+
+
 }
