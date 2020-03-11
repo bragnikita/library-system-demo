@@ -36,8 +36,18 @@ open class BooksController(
         return HttpResponse.ok()
     }
 
-    @Get("/search{?author}")
-    open fun search(@QueryValue("author") author: String?): HttpResponse<List<Book>> {
-        return HttpResponse.ok(repository.findByAuthor(author.orEmpty()))
+    @Get("/search{?author,title}")
+    open fun search(
+            @QueryValue("author") author: String?,
+            @QueryValue("title") title: String?
+    ): HttpResponse<List<Book>> {
+        val filtered = if (!author.isNullOrEmpty()) {
+            repository.findByAuthor(author.orEmpty())
+        } else if (!title.isNullOrEmpty()) {
+            repository.findByTitle(title.orEmpty())
+        } else {
+            repository.getAll();
+        }
+        return HttpResponse.ok(filtered)
     }
 }
