@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Library</title>
+    <script src="https://unpkg.com/vue"></script>
+
+    <style>
+        #library {
+            margin: auto;
+            max-width: 500px;
+        }
+
+        table#items {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        #items td {
+            border: 1px solid lightgray;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+<div id="library">
+    <form>
+        <label for="form_search_author">Author</label>
+        <input id="form_search_author" v-model="search_author" v-on:keyup.enter="filter"/>
+        <button @click.prevent="filter('author')">Filter</button>
+        <br/>
+        <label for="form_search_title">Title</label>
+        <input id="form_search_title" v-model="search_title" v-on:keyup.enter="filter"/>
+        <button @click.prevent="filter('title')">Filter</button>
+        <br/>
+    </form>
+    <table id="items">
+        <thead>
+        <tr>
+            <td>ID</td>
+            <td>Title</td>
+            <td>Author</td>
+            <td>Ops</td>
+        </tr>
+        </thead>
+        <tr v-for="item in items">
+            <td>{{ item.id }}</td>
+            <td>{{ item.title }}</td>
+            <td>{{ item.author }}</td>
+            <td>
+                <button @click="remove(item.id)"> Delete</button>
+                <button @click="edit(item)"> Edit</button>
+            </td>
+        </tr>
+    </table>
+    <form>
+        <label for="form_title">Title</label>
+        <input id="form_title" v-model="model.title"/>
+        <label for="form_author">Author</label>
+        <input id="form_author" v-model="model.author"/>
+        <button @click.prevent="add" v-if="!editing" :disabled="!isValid"> Add</button>
+        <button @click.prevent="update" v-if="editing" :disabled="!isValid"> Update</button>
+        <button @click.prevent="cancel" v-if="editing"> Cancel</button>
+    </form>
+</div>
+
+<script>
+    function getUrl(path) {
+        return "http://localhost:8080/library" + (path || "")
+    }
+
+    const defaultModel = {
+        title: "",
+        author: "",
+    };
+    new Vue({
+        el: "#library",
+        data: function () {
+            return {
+                search_author: "",
+                search_title: "",
+                editing: false,
+                model: {
+                    id: -1,
+                    title: "",
+                    author: "",
+                },
+                items: [],
+            }
+        },
+
+        methods: {
+            async add() {
+                await fetch(getUrl(), {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({...this.model, id: undefined})
+                });
+                await this.refresh();
+                this.model = {...defaultModel};
+            },
+            async remove(id) {
+                await fetch(getUrl(`/${id}`), {method: "DELETE"});
+                this.refresh();
+            },
+            edit(item) {
+                this.editing = true;
+                this.model = {...item}
+            },
+            async update() {
+                await fetch(getUrl(`/${this.model.id}`), {
+                    method: "PUT",
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(
+                        { ...this.model, id: undefined}
+                    )
+                });
+                await this.refresh();
+                this.cancel();
+            },
+            cancel() {
+                this.editing = false;
+                this.model = {...defaultModel}
+            },
+            filter(type) {
+                let q = "";
+                if (type === 'author') {
+                    q = `author=${encodeURI(this.search_author)}`;
+                    this.search_title = "";
+                } else {
+                    q = `title=${encodeURI(this.search_title)}`;
+                    this.search_author = "";
+                }
+                fetch(getUrl(`/search?${q}`)).then((r) => {
+                    r.json().then((json) => {
+                        this.items = json;
+                    });
+                });
+            },
+            refresh() {
+                fetch(getUrl()).then((r) => {
+                    r.json().then((json) => {
+                        this.items = json;
+                    });
+                })
+            },
+        },
+
+        computed: {
+            isValid() {
+              return this.model.title && this.model.author;
+            },
+        },
+
+        async created() {
+            this.refresh();
+        },
+
+
+    })
+</script>
+</body>
+</html>

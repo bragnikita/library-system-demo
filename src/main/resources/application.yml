@@ -1,6 +1,23 @@
 micronaut:
   application:
     name: library
+  server:
+    port: 8080
+    cors:
+      enabled: true
+      configurations:
+        web:
+          allowedMethods:
+            - POST
+            - GET
+            - PUT
+            - DELETE
+  router:
+    static-resources:
+      default:
+        enabled: true
+        paths:
+          - classpath:public
 datasources:
   default:
     url: ${DB_URL:`jdbc:h2:mem:default;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE`}
