@@ -2,39 +2,34 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <title>Library</title>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <script src="https://unpkg.com/vue"></script>
 
     <style>
         #library {
             margin: auto;
-            max-width: 500px;
-        }
-
-        table#items {
-            border-collapse: collapse;
-            width: 100%;
-        }
-
-        #items td {
-            border: 1px solid lightgray;
-            padding: 5px;
+            max-width: 800px;
+            padding: 2em 3em;
         }
     </style>
 </head>
 <body>
 <div id="library">
-    <form>
-        <label for="form_search_author">Author</label>
-        <input id="form_search_author" v-model="search_author" v-on:keyup.enter="filter"/>
-        <button @click.prevent="filter('author')">Filter</button>
-        <br/>
-        <label for="form_search_title">Title</label>
-        <input id="form_search_title" v-model="search_title" v-on:keyup.enter="filter"/>
-        <button @click.prevent="filter('title')">Filter</button>
-        <br/>
+    <form class="form-inline">
+        <label for="form_search_author" style="width: 100px">Author</label>
+        <input id="form_search_author" v-model="search_author" v-on:keyup.enter="filter" class="form-control mr-2"/>
+        <button @click.prevent="filter('author')" class="btn btn-secondary">Filter</button>
     </form>
-    <table id="items">
+    <form class="form-inline mt-3">
+        <label for="form_search_title" style="width: 100px">Title</label>
+        <input id="form_search_title" v-model="search_title" v-on:keyup.enter="filter" class="form-control mr-2"/>
+        <button @click.prevent="filter('title')" class="btn btn-secondary">Filter</button>
+    </form>
+    <table id="items" class="table table-striped mt-3">
         <thead>
         <tr>
             <td>ID</td>
@@ -48,25 +43,34 @@
             <td>{{ item.title }}</td>
             <td>{{ item.author }}</td>
             <td>
-                <button @click="remove(item.id)"> Delete</button>
-                <button @click="edit(item)"> Edit</button>
+                <button @click="remove(item.id)" class="btn btn-outline-danger btn-sm"> Delete</button>
+                <button @click="edit(item)" class="btn btn-outline-warning btn-sm"> Edit</button>
             </td>
         </tr>
     </table>
-    <form>
-        <label for="form_title">Title</label>
-        <input id="form_title" v-model="model.title"/>
-        <label for="form_author">Author</label>
-        <input id="form_author" v-model="model.author"/>
-        <button @click.prevent="add" v-if="!editing" :disabled="!isValid"> Add</button>
-        <button @click.prevent="update" v-if="editing" :disabled="!isValid"> Update</button>
-        <button @click.prevent="cancel" v-if="editing"> Cancel</button>
+    <div class="text-center p-2" v-if="items.length === 0">No items</div>
+    <form class="mt-4 container p-5 border">
+        <div class="form-group row">
+            <label for="form_title" class="col-sm-2">Title</label>
+            <input id="form_title" class="form-control col-sm-10" v-model="model.title"/>
+        </div>
+        <div class="form-group row">
+            <label for="form_author" class="col-sm-2">Author</label>
+            <input id="form_author" class="form-control col-sm-10" v-model="model.author"/>
+        </div>
+        <div class="row justify-content-center">
+            <button @click.prevent="add" v-if="!editing" :disabled="!isValid" class="btn btn-primary mr-2"> Add</button>
+            <button @click.prevent="update" v-if="editing" :disabled="!isValid" class="btn btn-primary mr-2"> Update
+            </button>
+            <button @click.prevent="cancel" v-if="editing" class="btn btn-secondary"> Cancel</button>
+        </div>
     </form>
 </div>
 
 <script>
     function getUrl(path) {
-        return "http://localhost:8080/library" + (path || "")
+        // return "http://localhost:8080/library" + (path || "")
+        return "/library" + (path || "")
     }
 
     const defaultModel = {
@@ -116,7 +120,7 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(
-                        { ...this.model, id: undefined}
+                        {...this.model, id: undefined}
                     )
                 });
                 await this.refresh();
@@ -152,14 +156,13 @@
 
         computed: {
             isValid() {
-              return this.model.title && this.model.author;
+                return this.model.title && this.model.author;
             },
         },
 
         async created() {
             this.refresh();
         },
-
 
     })
 </script>
